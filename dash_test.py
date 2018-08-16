@@ -220,10 +220,10 @@ def update_plot_2(children, figure, n_clicks):
         df_table = get_data_table(children, n_clicks)
 
         # lower bound
-        lb = df_table.iloc[17, 1:n_clicks].values
+        lb = df_table.iloc[17, 1:n_clicks+1].values
 
         # upper bound
-        ub = df_table.iloc[18, 1:n_clicks].values
+        ub = df_table.iloc[18, 1:n_clicks+1].values
 
         # iter
         iterations = np.arange(n_clicks+1)
