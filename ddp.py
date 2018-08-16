@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import linprog
 from cvxopt import matrix, solvers
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import copy
 
 
@@ -342,72 +342,72 @@ def get_cut(result_iter):
     return cut
 
 
-def run_optim():
-
-    # hours in each stage (in this case month)
-    duration = [744., 672.]
-
-    # m3/s
-    inflow = [40., 0.]
-
-    # MW
-    load = 12.
-
-    list_plants = []
-
-    list_plants.append(TermoPlant(cap=5., cost=8.))
-    list_plants.append(TermoPlant(cap=5., cost=12.))
-    list_plants.append(TermoPlant(cap=20., cost=15.))
-    list_plants.append(HydroPlant(cap=11., prod_fac=0.2, vmax=130.))
-
-    # create bookkeeping dictionary for storing results
-    results = []
-
-    # previous_cuts
-    previous_cuts = []
-
-    plt.ion()
-
-    # initiate plot window
-    f, (ax1, ax2) = plt.subplots(2, 1)
-
-    # add real sampled fcf to plot
-    xfcf, yfcf = estimate_fcf(list_plants)
-
-    ax1.plot(xfcf, yfcf, ls='--', c='blue', alpha=0.1)
-
-    plt.pause(0.2)
-    plt.show()
-
-    for iter in np.arange(0, 4):
-
-        result_iter = [None, None]
-        results = results + [result_iter]
-
-        for stage in np.arange(0, 2):
-
-            dict_lp = set_lp(list_plants, load, stage, duration[stage], inflow[stage], result_iter, previous_cuts)
-
-            result = solvers.lp(c=dict_lp['c'], G=dict_lp['G'], h=dict_lp['h'], A=dict_lp['A'], b=dict_lp['b'],
-                                solver='glpk', options={'glpk':{'msg_lev':'GLP_MSG_OFF'}})
-
-            result_iter[stage] = copy.deepcopy(result)
-
-        previous_cuts = previous_cuts + [get_cut(result_iter)]
-
-        plot_cuts(results, f, ax1, ax2, realfcf=(xfcf, yfcf))
-
-        plt.show()
-        plt.pause(0.02)
-
-        print_summary(results)
-
-        input("Press Enter to continue...")
-
-    plt.ioff()
-    plt.show()
-
-    return results
+# def run_optim():
+#
+#     # hours in each stage (in this case month)
+#     duration = [744., 672.]
+#
+#     # m3/s
+#     inflow = [40., 0.]
+#
+#     # MW
+#     load = 12.
+#
+#     list_plants = []
+#
+#     list_plants.append(TermoPlant(cap=5., cost=8.))
+#     list_plants.append(TermoPlant(cap=5., cost=12.))
+#     list_plants.append(TermoPlant(cap=20., cost=15.))
+#     list_plants.append(HydroPlant(cap=11., prod_fac=0.2, vmax=130.))
+#
+#     # create bookkeeping dictionary for storing results
+#     results = []
+#
+#     # previous_cuts
+#     previous_cuts = []
+#
+#     plt.ion()
+#
+#     # initiate plot window
+#     f, (ax1, ax2) = plt.subplots(2, 1)
+#
+#     # add real sampled fcf to plot
+#     xfcf, yfcf = estimate_fcf(list_plants)
+#
+#     ax1.plot(xfcf, yfcf, ls='--', c='blue', alpha=0.1)
+#
+#     plt.pause(0.2)
+#     plt.show()
+#
+#     for iter in np.arange(0, 4):
+#
+#         result_iter = [None, None]
+#         results = results + [result_iter]
+#
+#         for stage in np.arange(0, 2):
+#
+#             dict_lp = set_lp(list_plants, load, stage, duration[stage], inflow[stage], result_iter, previous_cuts)
+#
+#             result = solvers.lp(c=dict_lp['c'], G=dict_lp['G'], h=dict_lp['h'], A=dict_lp['A'], b=dict_lp['b'],
+#                                 solver='glpk', options={'glpk':{'msg_lev':'GLP_MSG_OFF'}})
+#
+#             result_iter[stage] = copy.deepcopy(result)
+#
+#         previous_cuts = previous_cuts + [get_cut(result_iter)]
+#
+#         plot_cuts(results, f, ax1, ax2, realfcf=(xfcf, yfcf))
+#
+#         plt.show()
+#         plt.pause(0.02)
+#
+#         print_summary(results)
+#
+#         input("Press Enter to continue...")
+#
+#     plt.ioff()
+#     plt.show()
+#
+#     return results
 
 
 def compute_line_cut(result_i):
@@ -419,51 +419,51 @@ def compute_line_cut(result_i):
     return x1, y1
 
 
-def plot_cuts(results, f, ax1, ax2, realfcf=None):
-
-    # f, (ax1, ax2) = plt.subplots(2, 1)
-
-    # clear top plot
-    ax1.cla()
-
-    curr_iter = len(results) - 1
-
-    if realfcf is not None:
-        ax1.plot(realfcf[0], realfcf[1], ls='--', c='blue', alpha=0.1)
-
-    # first get all cuts
-    y1 = []
-    for i in range(curr_iter+1):
-        result_iter = results[i]
-        xaux, yaux = compute_line_cut(result_iter)
-        y1 = y1 + [yaux]
-
-        ax1.plot(result_iter[0]['x'][4], result_iter[1]['primal objective'], 'ro')
-        ax1.plot(xaux, yaux, ls='-', c='grey', alpha=0.2)
-
-    fcf = y1[0]
-    for i in np.arange(1, len(y1)):
-        fcf = np.maximum(fcf, y1[i])
-
-    ax1.plot(xaux, fcf, ls='-', c='red')
-
-    # clear bottom plot
-    ax2.cla()
-
-    x_iter = np.arange(curr_iter+1) + 1
-
-    lb = [rr[0]['primal objective'] for rr in results]
-    alpha = [rr[0]['x'][6] for rr in results]
-    cost_stage2 = [rr[1]['primal objective'] for rr in results]
-    ub = [lb[i] - alpha[i] + cost_stage2[i] for i in range(len(lb))]
-
-    ax2.plot(x_iter, lb, ls='--', c='black', marker='o')
-    ax2.plot(x_iter, ub, ls='--', c='black', marker='o')
-
-    ax2.set_xlim([0, 5])
-    ax2.set_xticks(np.arange(1, 5))
-
-    plt.show()
+# def plot_cuts(results, f, ax1, ax2, realfcf=None):
+#
+#     # f, (ax1, ax2) = plt.subplots(2, 1)
+#
+#     # clear top plot
+#     ax1.cla()
+#
+#     curr_iter = len(results) - 1
+#
+#     if realfcf is not None:
+#         ax1.plot(realfcf[0], realfcf[1], ls='--', c='blue', alpha=0.1)
+#
+#     # first get all cuts
+#     y1 = []
+#     for i in range(curr_iter+1):
+#         result_iter = results[i]
+#         xaux, yaux = compute_line_cut(result_iter)
+#         y1 = y1 + [yaux]
+#
+#         ax1.plot(result_iter[0]['x'][4], result_iter[1]['primal objective'], 'ro')
+#         ax1.plot(xaux, yaux, ls='-', c='grey', alpha=0.2)
+#
+#     fcf = y1[0]
+#     for i in np.arange(1, len(y1)):
+#         fcf = np.maximum(fcf, y1[i])
+#
+#     ax1.plot(xaux, fcf, ls='-', c='red')
+#
+#     # clear bottom plot
+#     ax2.cla()
+#
+#     x_iter = np.arange(curr_iter+1) + 1
+#
+#     lb = [rr[0]['primal objective'] for rr in results]
+#     alpha = [rr[0]['x'][6] for rr in results]
+#     cost_stage2 = [rr[1]['primal objective'] for rr in results]
+#     ub = [lb[i] - alpha[i] + cost_stage2[i] for i in range(len(lb))]
+#
+#     ax2.plot(x_iter, lb, ls='--', c='black', marker='o')
+#     ax2.plot(x_iter, ub, ls='--', c='black', marker='o')
+#
+#     ax2.set_xlim([0, 5])
+#     ax2.set_xticks(np.arange(1, 5))
+#
+#     plt.show()
 
 
 def estimate_fcf(list_plants):
