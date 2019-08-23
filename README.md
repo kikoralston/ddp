@@ -45,7 +45,7 @@ Initial storage in the reservoir is assumed as being zero.
 The formulation of this problem is:
 
 <p align="center">
-<img src="./equation.png" alt="LP" width="600">
+<img src="./equation.png" alt="LP" width="700">
 </p>
 
 
