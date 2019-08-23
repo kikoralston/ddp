@@ -23,7 +23,7 @@ This toy example contains one hydro generator and three thermal generators with 
 
 The charachteristics of the plants are shown in the following table:
 
-| Generator      | Capacity     |  Cost         | Vmax         | Prod. Factor  |
+| Generator      | Capacity (MW)|  Cost (\$/MWh)| Vmax (Hm<sup>3</sup>)| Prod. Factor (MW/m<sup>3</sup>/s)  |
 | :------------- |:-------------| :-------------|:-------------|:-----|
 | Hydro          | 11           |  -            | 130          | 0.2  |
 | Thermo 1       | 5            |  8            | -            | -    |
