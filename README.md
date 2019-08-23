@@ -2,7 +2,7 @@
 
 ## Introduction
 
-A python-based web app that shows the iterative steps to solve a simple 2 stage ($t_0$ and $t_1$)
+A python-based web app that shows the iterative steps to solve a simple 2 stage (t0 and t1)
 deterministic dual dynamic programming (ddp) hydro-thermal scheduling problem.
 The web app is available at <https://dash-test-ddp.herokuapp.com/>.
 
@@ -15,7 +15,7 @@ The following figure showns the decision tree of this problem \[[1](https://www.
 
 This web app is 100% based (a.k.a. copied) on a excel toy example used by [PSR](www.psr-inc.com). 
 
-This toy example contains one hydro generator and three thermal generators with different generation costs. It simulates the optimal dispatch scheduling in $t_0$ taking into account the future cost (in $t_1$) of generation.
+This toy example contains one hydro generator and three thermal generators with different generation costs. It simulates the optimal dispatch scheduling in t0 taking into account the future cost (in t1) of generation.
 
 <p align="center">
 <img src="./diagram.png" alt="toy example" width="400">
