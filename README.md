@@ -20,6 +20,15 @@ This toy example contains one hydro generator and three thermal generators with 
 | Thermo 2 	     | 5            |  12           | -            | -    |
 | Thermo 3       | 20           |  15           | -            | -    |
 
+
+The formulation of this problem is:
+
+<p align="center">
+<img src="./equation.png" alt="LP" width="600">
+</p>
+
+
+
 ## Contents
 
 ### ddp.py
