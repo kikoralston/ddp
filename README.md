@@ -8,8 +8,7 @@ This is 100% based on a excel toy example used by PSR (www.PSR.inc).
 
 This toy example contains one hydro generator and three thermal generators with different generation costs. It simulates the optimal dispatch scheduling in $t_0$ taking into account the future cost (in $t_1$) of generation.
 
-![toy example](./diagram.png)
-
+<img src="./diagram.png" alt="toy example" width="400">
 
 ## Contents
 
