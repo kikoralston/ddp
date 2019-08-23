@@ -9,7 +9,7 @@ The web app is available at <https://dash-test-ddp.herokuapp.com/>.
 The following figure showns the decision tree of this problem \[[1](https://www.sciencedirect.com/science/article/pii/S1364032116300983)\].
 
 <p align="center">
-<img src="./decision_tree.png" alt="Decision Tree" width="600">
+<img src="./decision_tree.png" alt="Decision Tree" width="400">
 </p>
 
 
