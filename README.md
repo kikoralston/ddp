@@ -12,6 +12,14 @@ This toy example contains one hydro generator and three thermal generators with 
 <img src="./diagram.png" alt="toy example" width="400">
 </p>
 
+
+| Generator      | Capacity     |  Cost         | Vmax         | Prod. Factor  |
+| :------------- |:-------------| :-------------|:-------------|:-----|
+| Hydro          | 11           |  -            | 130          | 0.2  |
+| Thermo 1       | 5            |  8            | -            | -    |
+| Thermo 2 	     | 5            |  12           | -            | -    |
+| Thermo 3       | 20           |  15           | -            | -    |
+
 ## Contents
 
 ### ddp.py

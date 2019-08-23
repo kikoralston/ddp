@@ -6,4 +6,7 @@ venv
 .idea/
 *.xls
 
+*.sh
+*.pptx
 diagram/
+equation/
