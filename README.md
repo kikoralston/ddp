@@ -35,8 +35,8 @@ Additional data:
 |                            |              |
 | :-------------             |:-------------|
 | Load                       | 12 MW        |
-| Inflows in 1st stage       | 40 m3/s      |
-| Inflows in 2nd stage       | 0 m3/s       |
+| Inflows in 1st stage       | 40 m<sup>3</sup>/s      |
+| Inflows in 2nd stage       | 0 m<sup>3</sup>/s       |
 
 
 Initial storage in the reservoir is assumed as being zero.
