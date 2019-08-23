@@ -4,7 +4,7 @@
 
 A python-based web app that shows a simple 2 stage ($t_0$ and $t_1$) deterministic dual dynamic programming (ddp) hydro-thermal scheduling problem.
 
-This is 100% based on a excel toy example used by PSR (www.PSR.inc). 
+This is 100% based on a excel toy example used by PSR (www.psr-inc.com). 
 
 This toy example contains one hydro generator and three thermal generators with different generation costs. It simulates the optimal dispatch scheduling in $t_0$ taking into account the future cost (in $t_1$) of generation.
 
