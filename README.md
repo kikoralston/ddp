@@ -13,7 +13,7 @@ The following figure showns the decision tree of this problem \[[1](https://www.
 </p>
 
 
-This web app is 100% based (a.k.a. copied) on a excel toy example used by [PSR](www.psr-inc.com). 
+This web app is 100% based (a.k.a. copied) on a excel toy example used by [PSR](http://www.psr-inc.com). 
 
 This toy example contains one hydro generator and three thermal generators with different generation costs. It simulates the optimal dispatch scheduling in t0 taking into account the future cost (in t1) of generation.
 
