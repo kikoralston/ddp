@@ -98,14 +98,20 @@ def run_step_ddp(c, stage, vinihydro, previous_cuts):
 app = dash.Dash(__name__)
 server = app.server
 
+
 app.layout = html.Div(
     [html.H2('A simple 2 stage hydro-scheduling example'),
-     html.Div([dcc.Link('https://github.com/kikoralston/ddp/', href='https://github.com/kikoralston/ddp/')], style={'font-family': 'sans-serif'}),
-     html.Br(),
-     html.Div([html.Div(html.Button(id='submit-button', n_clicks=0, children='Increment Iteration', type='submit'),
-                        style={'display': 'inline-block', 'width': '49%'}),
-               html.Div(dcc.Graph(id='example-graph-3', style={'height': '200px'}, config={'displayModeBar': False}),
-                        style={'display': 'inline-block', 'width': '49%'})]),
+     html.Div([html.Div(dcc.Link('https://github.com/kikoralston/ddp/', href='https://github.com/kikoralston/ddp/'),
+                        style={'display': 'inline-block', 'font-family': 'sans-serif', 'width': '49%'}),
+               html.Div(html.Button(id='submit-button', n_clicks=0, children='Run one stage', type='submit'),
+                        style={'display': 'inline-block', 'width': '25%'}),
+               html.Div(html.Button(id='reset-button', n_clicks=0, children='Reset', type='submit'),
+                        style={'display': 'inline-block', 'width': '25%'})], style={}),
+     dcc.Markdown('-----'),
+     html.Div([dcc.Graph(id='example-graph-3',
+                         style={'display': 'inline-block', 'height': '200px', 'width': '40%'},
+                         config={'displayModeBar': False})],
+              style={'text-align': 'center'}),
      html.Br(),
      html.Div([html.Div(id='table-out',
                         style={'display': 'inline-block', 'width': '49%', 'vertical-align': 'top'}),
@@ -114,6 +120,13 @@ app.layout = html.Div(
      # Hidden div inside the app that stores the intermediate value
      html.Div(id='hidden-value', style={'display': 'none'}) #
      ])
+
+
+@app.callback(Output('submit-button', 'n_clicks'),
+              [Input('reset-button', 'n_clicks')])
+def reset(n_clicks):
+
+    return 0
 
 
 @app.callback(Output('table-out', 'children'),
