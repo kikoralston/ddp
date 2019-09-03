@@ -112,7 +112,7 @@ app.layout = html.Div(
                html.Div([dcc.Graph(id='example-graph'), dcc.Graph(id='example-graph-2')],
                         style={'display': 'inline-block', 'width': '49%'})]),
      # Hidden div inside the app that stores the intermediate value
-     html.Div(id='hidden-value') #, style={'display': 'none'}
+     html.Div(id='hidden-value', style={'display': 'none'}) #
      ])
 
 
