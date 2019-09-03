@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import json
 from scipy.optimize import linprog
 from cvxopt import matrix, solvers
 #import matplotlib.pyplot as plt
@@ -7,21 +8,22 @@ import copy
 
 
 class PowerPlant:
-    def __init__(self, cap):
+    def __init__(self, idx, cap):
+        self.idx = idx
         self.cap = cap
         self.type = None
 
 
 class TermoPlant(PowerPlant):
-    def __init__(self, cap, cost):
-        super().__init__(cap=cap)
+    def __init__(self, idx, cap, cost):
+        super().__init__(idx=idx, cap=cap)
         self.type = 'thermo'
         self.cost = cost
 
 
 class HydroPlant(PowerPlant):
-    def __init__(self, cap, prod_fac=0., vmax=0., vini=0.):
-        super().__init__(cap=cap)
+    def __init__(self, idx, cap, prod_fac=0., vmax=0., vini=0.):
+        super().__init__(idx=idx, cap=cap)
         self.type = 'hydro'
         self.prod_fac = prod_fac
         self.vmax = vmax
@@ -43,45 +45,48 @@ class CaseConfig:
 
         self.inflows = {}
         self.hours = []
+        self.load = []
 
     def read_config(self):
 
         with open('./config.txt', 'r') as f:
-            d = f.readlines()
+            d = json.load(f)
 
         # read general data
-        self.nhydro = int(d[3].split(',')[1].strip())
-        self.ntherm = int(d[4].split(',')[1].strip())
-        self.nper = int(d[5].split(',')[1].strip())
+        self.nhydro = int(d['general data']['nhyd'])
+        self.ntherm = int(d['general data']['nterm'])
+        self.nper = int(d['general data']['nper'])
 
         # read data from thermal plants
         self.list_thermal = [None] * self.ntherm
-        for i in range(self.ntherm):
-            data_therm = d[10+i].split(',')
-            cap = float(data_therm[1].strip())
-            cost = float(data_therm[2].strip())
-            self.list_thermal[i] = TermoPlant(cap, cost)
+        for i, tp in enumerate(d['term data']):
+            idx = int(tp['idx_t'])
+            cap = float(tp['pot'])
+            cost = float(tp['cost'])
+            self.list_thermal[i] = TermoPlant(idx, cap, cost)
 
         # read data from hydro plants
         self.list_hydro = [None] * self.nhydro
-        for i in range(self.nhydro):
-            data_hyd = d[17+i].split(',')
-            cap = float(data_hyd[1].strip())
-            vmax = float(data_hyd[2].strip())
-            vini = float(data_hyd[3].strip())
-            prodfac = float(data_hyd[4].strip())
+        for i, hp in enumerate(d['hydro data']):
+            idx = int(hp['idx_h'])
+            cap = float(hp['pot'])
+            vmax = float(hp['vmax'])
+            vini = float(hp['vini'])
+            prodfac = float(hp['prod_factor'])
 
-            self.list_hydro[i] = HydroPlant(cap, prodfac, vmax, vini)
+            self.list_hydro[i] = HydroPlant(idx, cap, prodfac, vmax, vini)
 
         # read inflow data
-        for i in range(self.nhydro):
-            data_inflow = d[22+i].split(',')
-            #idx_hyd = data_inflow[0].strip()
-            y = list(map(lambda x: float(x.strip()), data_inflow[1].split(';')))
-            self.inflows[i] = y
+        for i, inflows in enumerate(d['inflows']):
+            idx_h = inflows['idx_h']
+            y = inflows['values']
+            self.inflows[idx_h] = y
 
         # read number of hours in each period
-        self.hours = list(map(lambda x: int(x.strip()), d[27].split(';')))
+        self.hours = d['hours']
+
+        # read load (MW)
+        self.load = d['load']
 
 
 def update_col_results_df(df_results, res, iter, stage):
@@ -336,12 +341,13 @@ def set_lp(c, stage, vinihydro, previous_cuts):
             row = np.array(n_var * [0.])
             row[pos_plant:pos_plant+3] = [1., 1., 1.]
 
+            # TODO: define vinihydro as list for cases with more than 1 hydro
             if stage == 0:
                 vini = p.vini
             else:
                 vini = vinihydro
 
-            inflow = c.inflows[0][stage]
+            inflow = c.inflows[p.idx][stage]
 
             rhs = vini + np.round(inflow*(3600.*hours)/1e6, 2)
 
