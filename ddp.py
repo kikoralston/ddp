@@ -26,7 +26,88 @@ class HydroPlant(PowerPlant):
         self.prod_fac = prod_fac
         self.vmax = vmax
         self.vini = vini
-        self.turbmax = np.round(cap / prod_fac)
+        if prod_fac > 0:
+            self.turbmax = np.round(cap / prod_fac)
+        else:
+            self.turbmax = 0
+
+
+class CaseConfig:
+    def __init__(self):
+        self.nhydro = 0
+        self.ntherm = 0
+        self.nper = 0
+
+        self.list_hydro = []
+        self.list_thermal = []
+
+        self.inflows = {}
+        self.hours = []
+
+    def read_config(self):
+
+        with open('./config.txt', 'r') as f:
+            d = f.readlines()
+
+        # read general data
+        self.nhydro = int(d[3].split(',')[1].strip())
+        self.ntherm = int(d[4].split(',')[1].strip())
+        self.nper = int(d[5].split(',')[1].strip())
+
+        # read data from thermal plants
+        self.list_thermal = [None] * self.ntherm
+        for i in range(self.ntherm):
+            data_therm = d[10+i].split(',')
+            cap = float(data_therm[1].strip())
+            cost = float(data_therm[2].strip())
+            self.list_thermal[i] = TermoPlant(cap, cost)
+
+        # read data from hydro plants
+        self.list_hydro = [None] * self.nhydro
+        for i in range(self.nhydro):
+            data_hyd = d[17+i].split(',')
+            cap = float(data_hyd[1].strip())
+            vmax = float(data_hyd[2].strip())
+            vini = float(data_hyd[3].strip())
+            prodfac = float(data_hyd[4].strip())
+
+            self.list_hydro[i] = HydroPlant(cap, prodfac, vmax, vini)
+
+        # read inflow data
+        for i in range(self.nhydro):
+            data_inflow = d[22+i].split(',')
+            #idx_hyd = data_inflow[0].strip()
+            y = list(map(lambda x: float(x.strip()), data_inflow[1].split(';')))
+            self.inflows[i] = y
+
+        # read number of hours in each period
+        self.hours = list(map(lambda x: int(x.strip()), d[27].split(';')))
+
+
+def update_col_results_df(df_results, res, iter, stage):
+
+    if stage == 1:
+
+        results_stage1 = [np.round(x, 2) for x in list(res['x'])] + [np.round(list(res['y'])[1], 2)] + [np.round(res['primal objective'], 2)]
+
+        df_results.iloc[0:9, iter] = results_stage1
+
+    else:
+        results_stage2 = [np.round(x, 2) for x in list(res['x'])[:6]] + [np.round(list(res['y'])[1], 2)] + [np.round(res['primal objective'], 2)]
+
+        cost_stage1 = df_results.iloc[8, iter]
+        cost_stage2 = res['primal objective']
+        alpha = df_results.iloc[6, iter]
+
+        lb = np.round(cost_stage1, 2)
+        ub = np.round(cost_stage1 - alpha + cost_stage2, 2)
+        gap = np.round(np.abs(ub-lb)/ub, 2)
+
+        results_stage2 = results_stage2 + [lb, ub, '{0:.0f}%'.format(100*gap)]
+
+        df_results.iloc[9:, iter] = results_stage2
+
+    return df_results
 
 
 def save_results_df(res):
@@ -179,10 +260,13 @@ def print_summary(res):
     print(fmt_print.format(*gap))
 
 
-def set_lp(list_plants, load, stage, hours, inflow, results_iter, previous_cuts):
+def set_lp(c, stage, vinihydro, previous_cuts):
 
-    n_term = len([1 for i in list_plants if i.type == 'thermo'])
-    n_hydro = len(list_plants) - n_term
+    load = 12
+    hours = c.hours[stage]
+
+    n_term = c.ntherm
+    n_hydro = c.nhydro
 
     # vector of decision variables follows the following rule:
     #   - first the n_{term} variables for thermal generation (in MWh)
@@ -195,6 +279,7 @@ def set_lp(list_plants, load, stage, hours, inflow, results_iter, previous_cuts)
     # therefore, cost vector will have size n_{term} + 3*n_{hydro} + 1
 
     n_var = n_term + 3*n_hydro + 1
+    list_plants = c.list_thermal + c.list_hydro
 
     # dictionary mapping indexes in list of plants to position in variable vector
     dict_pos = {}
@@ -254,7 +339,9 @@ def set_lp(list_plants, load, stage, hours, inflow, results_iter, previous_cuts)
             if stage == 0:
                 vini = p.vini
             else:
-                vini = results_iter[stage-1]['x'][pos_plant + 1]
+                vini = vinihydro
+
+            inflow = c.inflows[0][stage]
 
             rhs = vini + np.round(inflow*(3600.*hours)/1e6, 2)
 
@@ -342,6 +429,42 @@ def get_cut(result_iter):
     return cut
 
 
+def compute_line_cut(result_i):
+
+    # first get all cuts
+    x1 = np.arange(0, 140)
+    y1 = result_i[1]['primal objective'] - result_i[1]['y'][1] * (x1 - result_i[0]['x'][4])
+
+    return x1, y1
+
+
+def estimate_fcf(list_plants):
+
+    fcf = []
+
+    # previous_cuts
+    previous_cuts = []
+
+    vfinal_range = np.arange(0, 140, step=0.1)
+
+    for vfinal in vfinal_range:
+
+        x = np.array(7*[0.])
+        x[4] = vfinal
+        results = [{'x': x}]
+
+        # vini = bookkeep[curr_iter][stage - 1]['x'][pos_plant + 1]
+
+        dict_lp = set_lp(list_plants, 12, 1, 672, 0, results, None)
+
+        result = solvers.lp(c=dict_lp['c'], G=dict_lp['G'], h=dict_lp['h'], A=dict_lp['A'], b=dict_lp['b'],
+                            solver='glpk', options={'glpk':{'msg_lev':'GLP_MSG_OFF'}})
+
+        fcf = fcf + [result['primal objective']]
+
+    return vfinal_range, fcf
+
+
 # def run_optim():
 #
 #     # hours in each stage (in this case month)
@@ -408,17 +531,8 @@ def get_cut(result_iter):
 #     plt.show()
 #
 #     return results
-
-
-def compute_line_cut(result_i):
-
-    # first get all cuts
-    x1 = np.arange(0, 140)
-    y1 = result_i[1]['primal objective'] - result_i[1]['y'][1] * (x1 - result_i[0]['x'][4])
-
-    return x1, y1
-
-
+#
+#
 # def plot_cuts(results, f, ax1, ax2, realfcf=None):
 #
 #     # f, (ax1, ax2) = plt.subplots(2, 1)
@@ -464,30 +578,3 @@ def compute_line_cut(result_i):
 #     ax2.set_xticks(np.arange(1, 5))
 #
 #     plt.show()
-
-
-def estimate_fcf(list_plants):
-
-    fcf = []
-
-    # previous_cuts
-    previous_cuts = []
-
-    vfinal_range = np.arange(0, 140, step=0.1)
-
-    for vfinal in vfinal_range:
-
-        x = np.array(7*[0.])
-        x[4] = vfinal
-        results = [{'x': x}]
-
-        # vini = bookkeep[curr_iter][stage - 1]['x'][pos_plant + 1]
-
-        dict_lp = set_lp(list_plants, 12, 1, 672, 0, results, None)
-
-        result = solvers.lp(c=dict_lp['c'], G=dict_lp['G'], h=dict_lp['h'], A=dict_lp['A'], b=dict_lp['b'],
-                            solver='glpk', options={'glpk':{'msg_lev':'GLP_MSG_OFF'}})
-
-        fcf = fcf + [result['primal objective']]
-
-    return vfinal_range, fcf
