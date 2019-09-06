@@ -12,8 +12,7 @@ The following figure showns the decision tree of this problem \[[1](https://www.
 <img src="./decision_tree.png" alt="Decision Tree" width="400">
 </p>
 
-
-This web app is 100% based (a.k.a. copied) on a excel toy example used by [PSR](http://www.psr-inc.com). 
+This web app is 100% based  on a excel toy example created by [PSR Energy Consulting and Analytics](http://www.psr-inc.com).
 
 This toy example contains one hydro generator and three thermal generators with different generation costs. It simulates the optimal dispatch scheduling in t0 taking into account the future cost (in t1) of generation.
 
@@ -21,7 +20,7 @@ This toy example contains one hydro generator and three thermal generators with 
 <img src="./diagram.png" alt="toy example" width="400">
 </p>
 
-The charachteristics of the plants are shown in the following table:
+The parameters of the plants are shown in the following table:
 
 | Generator      | Capacity (MW)|  Cost (\$/MWh)| Vmax (Hm<sup>3</sup>)| Prod. Factor (MW/m<sup>3</sup>/s)  |
 | :------------- |:-------------| :-------------|:-------------|:-----|
@@ -64,6 +63,6 @@ This script has functions to create the LP and process results. It also defines 
 
 ### dash_test.py
 
-This script implements the web app interface using Dash
+This script implements the web app interface using Dash.
 
 

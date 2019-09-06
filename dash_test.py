@@ -62,6 +62,32 @@ def get_data_table(table, n_clicks):
     return df_table
 
 
+def update_col_results_df(df_results, res, iter, stage):
+
+    if stage == 1:
+
+        results_stage1 = [np.round(x, 2) for x in list(res['x'])] + [np.round(list(res['y'])[1], 2)] + [np.round(res['primal objective'], 2)]
+
+        df_results.iloc[0:9, iter] = results_stage1
+
+    else:
+        results_stage2 = [np.round(x, 2) for x in list(res['x'])[:6]] + [np.round(list(res['y'])[1], 2)] + [np.round(res['primal objective'], 2)]
+
+        cost_stage1 = df_results.iloc[8, iter]
+        cost_stage2 = res['primal objective']
+        alpha = df_results.iloc[6, iter]
+
+        lb = np.round(cost_stage1, 2)
+        ub = np.round(cost_stage1 - alpha + cost_stage2, 2)
+        gap = np.round(np.abs(ub-lb)/ub, 2)
+
+        results_stage2 = results_stage2 + [lb, ub, '{0:.0f}%'.format(100*gap)]
+
+        df_results.iloc[9:, iter] = results_stage2
+
+    return df_results
+
+
 def get_cuts_df(df, n_iter):
 
     cuts = []
@@ -145,18 +171,12 @@ def update_results(n_clicks, children, jsonvalue):
         # get CURRENT stage and iteration
         state_dict = json.loads(jsonvalue)
 
-        print(type(state_dict))
-        print(state_dict)
-
         stage = state_dict['stage']
         iter = state_dict['iter']
 
     html_tbl = None
 
     df_table = get_data_table(children, n_clicks)
-
-    print("******df_table*******")
-    print(df_table)
 
     if iter <= 1:
         # no cuts generated yet!
@@ -166,7 +186,7 @@ def update_results(n_clicks, children, jsonvalue):
         previous_cuts = get_cuts_df(df_table, iter)
 
     if stage > 1:
-        vinihydro = df_table.iloc[4, iter]
+        vinihydro = {1: df_table.iloc[4, iter]}
     else:
         vinihydro = None
 
@@ -181,8 +201,6 @@ def update_results(n_clicks, children, jsonvalue):
 
         html_tbl = generate_table(df_table)
 
-    print(html_tbl)
-
     return html_tbl
 
 
@@ -195,19 +213,18 @@ def update_hidden_div(figure, n_clicks, children):
     c = CaseConfig()
     c.read_config()
 
-    print("N CLICKS!!!" + str(n_clicks))
-
     if n_clicks == 0:
         state_dict = dict(iter=1, stage=1)
     else:
         state_dict = json.loads(children)
 
         # increment stage and iteration
-        if state_dict['stage'] + 1 > c.nper:
-            state_dict['stage'] = 1
-            state_dict['iter'] = state_dict['iter'] + 1
-        else:
-            state_dict['stage'] = state_dict['stage'] + 1
+        if state_dict['iter'] < 5:
+            if state_dict['stage'] + 1 > c.nper:
+                state_dict['stage'] = 1
+                state_dict['iter'] = state_dict['iter'] + 1
+            else:
+                state_dict['stage'] = state_dict['stage'] + 1
 
     return json.dumps(state_dict)
 
@@ -360,8 +377,7 @@ def update_decision_tree(jsonvalue, tab, n_clicks):
             # other node active
             active = [True if stage[i] == stagevalue+1 and iter[i] == itervalue else False for i in range(len(stage))]
 
-        nodes = pd.DataFrame({'idx': idx, 'x': x, 'y': y, 'iter': iter, 'stage': stage, 'vini': vini,
-                               'active': active})
+        nodes = pd.DataFrame({'idx': idx, 'x': x, 'y': y, 'iter': iter, 'stage': stage, 'vini': vini, 'active': active})
 
         # populate edges
         fromnode=[]
@@ -389,9 +405,8 @@ def update_decision_tree(jsonvalue, tab, n_clicks):
 
         edges = pd.DataFrame({'from': fromnode, 'to': tonode})
 
-    print(nodes)
-
-    print(edges)
+    #print(nodes)
+    #print(edges)
 
     # set layout
     layout = go.Layout(plot_bgcolor='rgba(0,0,0,0)',
