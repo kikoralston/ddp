@@ -6,7 +6,7 @@ A python-based web app that shows the iterative steps to solve a simple 2 stage 
 deterministic dual dynamic programming (ddp) hydro-thermal scheduling problem.
 The web app is available at <https://dash-test-ddp.herokuapp.com/>.
 
-The following figure showns the decision tree of this problem \[[1](https://www.sciencedirect.com/science/article/pii/S1364032116300983)\].
+The following figure showns the decision tree of this problem [^1]:
 
 <p align="center">
 <img src="./decision_tree.png" alt="Decision Tree" width="400">
@@ -65,4 +65,6 @@ This script has functions to create the LP and process results. It also defines 
 
 This script implements the web app interface using Dash.
 
+### References
 
+[^1]: Anderson Rodrigo de Queiroz, Stochastic hydro-thermal scheduling optimization: An overview, Renewable and Sustainable Energy Reviews, Volume 62, 2016, Pages 382-395, ISSN 1364-0321, https://doi.org/10.1016/j.rser.2016.04.065.(http://www.sciencedirect.com/science/article/pii/S1364032116300983)
